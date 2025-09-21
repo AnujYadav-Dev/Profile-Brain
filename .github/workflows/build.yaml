@@ -40,7 +40,7 @@ jobs:
 
       - name: Commit README changes
         run: |
-          cd public-repo
+          cd AnujYadav-Dev
           git add .
           git diff
           git config --global user.email "182692924+AnujYadav-Dev@users.noreply.github.com"
