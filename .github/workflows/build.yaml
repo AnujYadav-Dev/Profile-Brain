@@ -28,7 +28,7 @@ jobs:
 
       - name: Clone public repo
         run: |
-          git clone https://github.com/AnujYadav-Dev/AnujYadav-Dev.git
+          git clone https://x-access-token:${{ secrets.ACCESS_TOKEN }}@github.com/AnujYadav-Dev/AnujYadav-Dev.git
 
       - name: Run update script
         env:
