@@ -26,13 +26,16 @@ Add these in the **private repo’s** GitHub → Settings → Secrets and variab
 
 ## 🗂️ Repository Structure
 ```
-private-repo/
-│── today.py
-│── cache/
-│   └── requirements.txt
+Profile_README_Brain/
 │── .github/
 │   └── workflows/
 │       └── readme.yml   # workflow file
+│── cache/
+│   └── requirements.txt
+│── README.md
+│── today.py
+
+
 ```
 
 ---
