@@ -1,17 +1,17 @@
-# GitHub Profile Automation (Private → Public)
+# GitHub Profile Automation (This → Profile)
 
 This project automates updates to the public profile repository **[AnujYadav-Dev/AnujYadav-Dev](https://github.com/AnujYadav-Dev/AnujYadav-Dev)** 
-using scripts stored in a **private repository**.  
+using scripts stored in **this repository**.  
 
 The automation is handled using **GitHub Actions**, which runs daily and on manual dispatch.
 
 ---
 
 ## 📌 How It Works
-1. Workflow runs inside the **private repo** (contains `today.py` and dependencies).
+1. Workflow runs inside this **repo** (contains `today.py` and dependencies).
 2. It installs required Python packages from `cache/requirements.txt`.
 3. Clones the **public repo** (`AnujYadav-Dev/AnujYadav-Dev`).
-4. Runs `today.py` from the private repo, which updates the README and SVG files.
+4. Runs `today.py` from the this repo, which updates the README and SVG files.
 5. Commits and pushes changes back to the **public repo**.
 
 ---
@@ -49,4 +49,4 @@ Profile_README_Brain/
 
 ## 👨‍💻 Author
 **Anuj Kumar Yadav (AnujYadav-Dev)**  
-Maintains both private + public repositories for GitHub profile automation.
+Maintains both This + profile repositories for GitHub profile automation.
