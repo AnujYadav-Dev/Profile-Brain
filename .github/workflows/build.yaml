@@ -1,7 +1,8 @@
 name: README build
 on:
   schedule:
-    - cron: "0 4 */3 * *"
+    # Runs every Monday at 7:00 AM IST
+    - cron: '30 1 * * 1'
   workflow_dispatch:
 
 jobs:
