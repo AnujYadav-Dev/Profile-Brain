@@ -41,12 +41,18 @@ Profile_README_Brain/
 ---
 
 ## 🚀 Usage
-- Runs **every day at 04:00 UTC** automatically.
+- Runs According to **Corn Job** automatically.
 - Can also be triggered manually via **Actions → README build → Run workflow**.
 - Updates the README and SVGs in the **public repo**.
 
 ---
 
-## 👨‍💻 Author
-**Anuj Kumar Yadav (AnujYadav-Dev)**  
-Maintains both This + profile repositories for GitHub profile automation.
+## 🙏 Credits
+
+Based on [Andrew6rant/Andrew6rant](https://github.com/Andrew6rant/Andrew6rant) by [Andrew6rant](https://github.com/Andrew6rant).
+
+---
+
+## 📄 License
+
+MIT License - Feel free to customize and share!
