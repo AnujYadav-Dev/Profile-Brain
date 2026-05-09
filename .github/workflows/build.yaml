@@ -12,40 +12,40 @@ jobs:
       - name: Checkout private repo
         uses: actions/checkout@v4  
 
-      - name: Get Python 3.8
+      - name: Get Python 3.12
         uses: actions/setup-python@v5  
         with:
-          python-version: "3.8"
-
-      - name: Configure pip cache
-        uses: actions/cache@v4  
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/cache/requirements.txt') }}
-          restore-keys: ${{ runner.os }}-pip-
+          python-version: "3.12"
+          cache: 'pip'
 
       - name: Install dependencies
         run: python -m pip install -r cache/requirements.txt
 
-      - name: Clone public repo
-        run: |
-          git clone https://x-access-token:${{ secrets.ACCESS_TOKEN }}@github.com/${{ secrets.USER_NAME }}/${{ secrets.USER_NAME }}.git
+      - name: Clone target repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.TARGET_REPO || format('{0}/{0}', github.repository_owner) }}
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: target-repo
 
       - name: Run update script
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          USER_NAME: ${{ secrets.USER_NAME }}
-          BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
+          USER_NAME: ${{ vars.USER_NAME || github.repository_owner }}
+          BIRTH_DATE: ${{ vars.BIRTH_DATE }}
+          DARK_SVG_PATH: ${{ vars.DARK_SVG_PATH || 'dark_mode.svg' }}
+          LIGHT_SVG_PATH: ${{ vars.LIGHT_SVG_PATH || 'light_mode.svg' }}
+          CACHE_DIR: ${{ vars.CACHE_DIR || 'cache' }}
         run: |
-          cd ${{ secrets.USER_NAME }}
+          cd target-repo
           python ../today.py
 
       - name: Commit README changes
         run: |
-          cd ${{ secrets.USER_NAME }}
+          cd target-repo
           git add .
           git diff
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
+          git config --global user.name "${{ vars.COMMIT_AUTHOR_NAME || 'github-actions[bot]' }}"
+          git config --global user.email "${{ vars.COMMIT_AUTHOR_EMAIL || '41898282+github-actions[bot]@users.noreply.github.com' }}"
           git commit -m "Updated README" -a || echo "No changes to commit"
           git push

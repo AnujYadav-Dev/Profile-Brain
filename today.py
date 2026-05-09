@@ -5,6 +5,10 @@ import os
 from lxml import etree
 import time
 import hashlib
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Fine-grained personal access token with All Repositories access:
 # Account permissions: read:Followers, read:Starring, read:Watching
@@ -12,8 +16,11 @@ import hashlib
 # Issues and pull requests permissions not needed at the moment, but may be used in the future
 HEADERS = {'authorization': 'token '+ os.environ['ACCESS_TOKEN']}
 USER_NAME = os.environ['USER_NAME'] # 'AnujYadav-Dev'
-QUERY_COUNT = {'user_getter': 0, 'follower_getter': 0, 'graph_repos_stars': 0, 'recursive_loc': 0, 'graph_commits': 0, 'loc_query': 0}
+CACHE_DIR = os.environ.get('CACHE_DIR', 'cache')
+DARK_SVG_PATH = os.environ.get('DARK_SVG_PATH', 'dark_mode.svg')
+LIGHT_SVG_PATH = os.environ.get('LIGHT_SVG_PATH', 'light_mode.svg')
 
+QUERY_COUNT = {'user_getter': 0, 'follower_getter': 0, 'graph_repos_stars': 0, 'recursive_loc': 0, 'graph_commits': 0, 'loc_query': 0}
 
 def daily_readme(birthday):
     """
@@ -221,7 +228,8 @@ def cache_builder(edges, comment_size, force_cache, loc_add=0, loc_del=0):
     If it has, run recursive_loc on that repository to update the LOC count
     """
     cached = True # Assume all repositories are cached
-    filename = 'cache/'+hashlib.sha256(USER_NAME.encode('utf-8')).hexdigest()+'.txt' # Create a unique filename for each user
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    filename = os.path.join(CACHE_DIR, hashlib.sha256(USER_NAME.encode('utf-8')).hexdigest()+'.txt') # Create a unique filename for each user
     try:
         with open(filename, 'r') as f:
             data = f.readlines()
@@ -281,7 +289,8 @@ def add_archive():
     Several repositories I have contributed to have since been deleted.
     This function adds them using their last known data
     """
-    with open('cache/repository_archive.txt', 'r') as f:
+    archive_path = os.path.join(CACHE_DIR, 'repository_archive.txt')
+    with open(archive_path, 'r') as f:
         data = f.readlines()
     old_data = data
     data = data[7:len(data)-3] # remove the comment block    
@@ -300,11 +309,11 @@ def force_close_file(data, cache_comment):
     Forces the file to close, preserving whatever data was written to it
     This is needed because if this function is called, the program would've crashed before the file is properly saved and closed
     """
-    filename = 'cache/'+hashlib.sha256(USER_NAME.encode('utf-8')).hexdigest()+'.txt'
+    filename = os.path.join(CACHE_DIR, hashlib.sha256(USER_NAME.encode('utf-8')).hexdigest()+'.txt')
     with open(filename, 'w') as f:
         f.writelines(cache_comment)
         f.writelines(data)
-    print('There was an error while writing to the cache file. The file,', filename, 'has had the partial data saved and closed.')
+    logger.error('There was an error while writing to the cache file. The file, %s has had the partial data saved and closed.', filename)
 
 
 def stars_counter(data):
@@ -365,7 +374,7 @@ def commit_counter(comment_size):
     Counts up my total commits, using the cache file created by cache_builder.
     """
     total_commits = 0
-    filename = 'cache/'+hashlib.sha256(USER_NAME.encode('utf-8')).hexdigest()+'.txt' # Use the same filename as cache_builder
+    filename = os.path.join(CACHE_DIR, hashlib.sha256(USER_NAME.encode('utf-8')).hexdigest()+'.txt') # Use the same filename as cache_builder
     with open(filename, 'r') as f:
         data = f.readlines()
     cache_comment = data[:comment_size] # save the comment block
@@ -431,18 +440,17 @@ def formatter(query_type, difference, funct_return=False, whitespace=0):
     Prints a formatted time differential
     Returns formatted result if whitespace is specified, otherwise returns raw result
     """
-    print('{:<23}'.format('   ' + query_type + ':'), sep='', end='')
-    print('{:>12}'.format('%.4f' % difference + ' s ')) if difference > 1 else print('{:>12}'.format('%.4f' % (difference * 1000) + ' ms'))
+    time_str = '{:>12}'.format('%.4f' % difference + ' s ') if difference > 1 else '{:>12}'.format('%.4f' % (difference * 1000) + ' ms')
+    logger.info('{:<23}{}'.format('   ' + query_type + ':', time_str))
     if whitespace:
         return f"{'{:,}'.format(funct_return): <{whitespace}}"
     return funct_return
 
 
 if __name__ == '__main__':
-    """
-    Anuj Kumar Yadav (AnujYadav-Dev), 2025
-    """
-    print('Calculation times:')
+    author_string = f"{USER_NAME}, {datetime.datetime.now().year}"
+    logger.info("Starting execution for %s", author_string)
+    logger.info('Calculation times:')
     # define global variable for owner ID and calculate user's creation date
     # e.g {'id': 'U_kgDOCuOsPA'} and 2024-09-24T19:45:40Z for username 'AnujYadav-Dev'
     user_data, user_time = perf_counter(user_getter, USER_NAME)
@@ -466,7 +474,7 @@ if __name__ == '__main__':
     follower_data, follower_time = perf_counter(follower_getter, USER_NAME)
 
     # several repositories that I've contributed to have since been deleted.
-    if os.path.exists('cache/repository_archive.txt'):
+    if os.path.exists(os.path.join(CACHE_DIR, 'repository_archive.txt')):
         archived_data = add_archive()
         for index in range(len(total_loc)-1):
             total_loc[index] += archived_data[index]
@@ -475,13 +483,10 @@ if __name__ == '__main__':
 
     for index in range(len(total_loc)-1): total_loc[index] = '{:,}'.format(total_loc[index]) # format added, deleted, and total LOC
 
-    svg_overwrite('dark_mode.svg', age_data, commit_data, star_data, repo_data, contrib_data, follower_data, total_loc[:-1])
-    svg_overwrite('light_mode.svg', age_data, commit_data, star_data, repo_data, contrib_data, follower_data, total_loc[:-1])
+    svg_overwrite(DARK_SVG_PATH, age_data, commit_data, star_data, repo_data, contrib_data, follower_data, total_loc[:-1])
+    svg_overwrite(LIGHT_SVG_PATH, age_data, commit_data, star_data, repo_data, contrib_data, follower_data, total_loc[:-1])
 
-    # move cursor to override 'Calculation times:' with 'Total function time:' and the total function time, then move cursor back
-    print('\033[F\033[F\033[F\033[F\033[F\033[F\033[F\033[F',
-        '{:<21}'.format('Total function time:'), '{:>11}'.format('%.4f' % (user_time + age_time + loc_time + commit_time + star_time + repo_time + contrib_time)),
-        ' s \033[E\033[E\033[E\033[E\033[E\033[E\033[E\033[E', sep='')
-
-    print('Total GitHub GraphQL API calls:', '{:>3}'.format(sum(QUERY_COUNT.values())))
-    for funct_name, count in QUERY_COUNT.items(): print('{:<28}'.format('   ' + funct_name + ':'), '{:>6}'.format(count))
+    logger.info('Total function time: %.4f s', (user_time + age_time + loc_time + commit_time + star_time + repo_time + contrib_time))
+    logger.info('Total GitHub GraphQL API calls: %3d', sum(QUERY_COUNT.values()))
+    for funct_name, count in QUERY_COUNT.items(): 
+        logger.info('{:<28} {:>6}'.format('   ' + funct_name + ':', count))
