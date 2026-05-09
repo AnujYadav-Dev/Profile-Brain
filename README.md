@@ -4,11 +4,20 @@ This repository is a **fully dynamic, reusable, and configurable GitHub Action t
 
 ---
 
+<a href="https://github.com/AnujYadav-Dev/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/AnujYadav-Dev/AnujYadav-Dev/refs/heads/main/assets/github-metrics-dark.svg">
+    <img alt="Anuj Yadav's GitHub Profile README" src="https://raw.githubusercontent.com/AnujYadav-Dev/AnujYadav-Dev/refs/heads/main/assets/github-metrics-light.svg">
+  </picture>
+</a>
+
+---
+
 ## 📌 How It Works
 1. You **fork** this repository or use it as a template.
 2. The GitHub Action runs inside this repository on a schedule or via manual dispatch.
 3. It uses a Personal Access Token (PAT) to securely clone your **target repository** (e.g., your profile README).
-4. The `today.py` script runs, fetching your data via the GitHub GraphQL API and updating your SVGs.
+4. The `main.py` entry point runs the orchestrator, fetching your data via the GitHub GraphQL API and updating your SVGs.
 5. Finally, it commits and pushes the updated SVGs directly back to your target repository.
 
 ---
@@ -61,15 +70,22 @@ These are configuration options that can be visible. Add these under the **Varia
 ---
 
 ## 🗂️ Repository Structure
-```
+```text
 Profile-Brain/
 │── .github/
 │   └── workflows/
 │       └── build.yaml   # GitHub Action Workflow
-│── cache/
-│   └── requirements.txt # Python dependencies
+│── assets/
+│   └── templates/       # Base SVG templates
+│── src/
+│   ├── api/             # GitHub GraphQL Client & Queries
+│   ├── core/            # Config, Models, and Utilities
+│   ├── render/          # SVG parsing and overwriting logic
+│   └── storage/         # Cache management and file I/O
+│── .gitignore           # Git ignore rules
+│── main.py              # Root entry point orchestrator
 │── README.md            # This file
-│── today.py             # Core automation script
+│── requirements.txt     # Python dependencies
 ```
 
 ---
