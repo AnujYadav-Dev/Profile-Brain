@@ -6,6 +6,7 @@ from lxml import etree
 import time
 import hashlib
 import logging
+import shutil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ USER_NAME = os.environ['USER_NAME'] # 'AnujYadav-Dev'
 CACHE_DIR = os.environ.get('CACHE_DIR', 'cache')
 DARK_SVG_PATH = os.environ.get('DARK_SVG_PATH', 'dark_mode.svg')
 LIGHT_SVG_PATH = os.environ.get('LIGHT_SVG_PATH', 'light_mode.svg')
+TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 
 QUERY_COUNT = {'user_getter': 0, 'follower_getter': 0, 'graph_repos_stars': 0, 'recursive_loc': 0, 'graph_commits': 0, 'loc_query': 0}
 
@@ -325,11 +327,25 @@ def stars_counter(data):
     return total_stars
 
 
-def svg_overwrite(filename, age_data, commit_data, star_data, repo_data, contrib_data, follower_data, loc_data):
+def svg_overwrite(filename, mode, age_data, commit_data, star_data, repo_data, contrib_data, follower_data, loc_data):
     """
     Parse SVG files and update elements with my age, commits, stars, repositories, and lines written
     """
-    tree = etree.parse(filename)
+    if not os.path.exists(filename):
+        template_file = os.path.join(TEMPLATE_DIR, f"{mode}.svg")
+        if os.path.exists(template_file):
+            os.makedirs(os.path.dirname(filename) or '.', exist_ok=True)
+            shutil.copy(template_file, filename)
+            logger.info("Copied default template %s to %s", template_file, filename)
+        else:
+            logger.error("Template SVG file not found: '%s'. Also could not find default template at '%s'.", filename, template_file)
+            return
+
+    try:
+        tree = etree.parse(filename)
+    except OSError:
+        logger.error("Failed to parse SVG file: '%s'. Ensure the file is a valid XML/SVG.", filename)
+        return
     root = tree.getroot()
     justify_format(root, 'age_data', age_data, 49)
     justify_format(root, 'commit_data', commit_data, 22)
@@ -483,8 +499,8 @@ if __name__ == '__main__':
 
     for index in range(len(total_loc)-1): total_loc[index] = '{:,}'.format(total_loc[index]) # format added, deleted, and total LOC
 
-    svg_overwrite(DARK_SVG_PATH, age_data, commit_data, star_data, repo_data, contrib_data, follower_data, total_loc[:-1])
-    svg_overwrite(LIGHT_SVG_PATH, age_data, commit_data, star_data, repo_data, contrib_data, follower_data, total_loc[:-1])
+    svg_overwrite(DARK_SVG_PATH, 'dark_mode', age_data, commit_data, star_data, repo_data, contrib_data, follower_data, total_loc[:-1])
+    svg_overwrite(LIGHT_SVG_PATH, 'light_mode', age_data, commit_data, star_data, repo_data, contrib_data, follower_data, total_loc[:-1])
 
     logger.info('Total function time: %.4f s', (user_time + age_time + loc_time + commit_time + star_time + repo_time + contrib_time))
     logger.info('Total GitHub GraphQL API calls: %3d', sum(QUERY_COUNT.values()))
