@@ -19,7 +19,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: python -m pip install -r cache/requirements.txt
+        run: python -m pip install -r requirements.txt
 
       - name: Clone target repo
         uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
           CACHE_DIR: ${{ vars.CACHE_DIR || 'cache' }}
         run: |
           cd target-repo
-          python ../today.py
+          python ../main.py
 
       - name: Commit README changes
         run: |
